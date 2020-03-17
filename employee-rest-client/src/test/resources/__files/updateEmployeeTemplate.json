@@ -1,0 +1,5 @@
+{
+	"id": "{{request.path.[3]}}",
+	"firstName": "{{jsonPath request.body '$.firstName'}}",
+	"lastName": "{{jsonPath request.body '$.lastName'}}"
+}

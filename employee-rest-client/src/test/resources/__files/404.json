@@ -1,0 +1,6 @@
+{
+	"timeStamp": "{{now}}",
+	"uri": "{{request.path}}",
+	"message": "Requested resource not found",
+	"errorCode": 404
+}
