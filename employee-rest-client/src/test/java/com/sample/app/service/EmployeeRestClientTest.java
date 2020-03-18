@@ -28,6 +28,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
@@ -39,6 +40,12 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.sample.app.exception.EmployeeApiException;
 import com.sample.app.model.Employee;
 import com.sample.app.service.impl.EmployeeRestClient;
+
+import io.netty.channel.ChannelOption;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.tcp.TcpClient;
 
 public class EmployeeRestClientTest {
 	private static final int HTTP_SERVICE_PORT = 8888;
@@ -79,7 +86,14 @@ public class EmployeeRestClientTest {
 	public void setup() {
 		baseURI = "http://localhost:" + wireMockRule.port() + "/";
 
-		WebClient webClient = WebClient.create(baseURI);
+		TcpClient tcpClient = TcpClient.create().option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000)
+				.doOnConnected(conn -> {
+					conn.addHandlerLast(new ReadTimeoutHandler(3)).addHandlerLast(new WriteTimeoutHandler(3));
+				});
+
+		WebClient webClient = WebClient.builder()
+				.clientConnector(new ReactorClientHttpConnector(HttpClient.from(tcpClient))).baseUrl(baseURI).build();
+
 		empRestClient = new EmployeeRestClient(webClient);
 	}
 
@@ -487,6 +501,33 @@ public class EmployeeRestClientTest {
 
 		empRestClient.byId(1);
 
+	}
+
+	@Test(expected = EmployeeApiException.class)
+	public void injectFixedDelay() {
+
+		Employee emp = new Employee();
+		emp.setId(1);
+		emp.setFirstName("Chamu");
+		emp.setLastName("Gurram");
+
+		wireMockRule.stubFor(get(urlPathMatching("/api/v1/employees/1")).willReturn(aResponse().withFixedDelay(9000)));
+
+		empRestClient.byId(1);
+	}
+
+	@Test(expected = EmployeeApiException.class)
+	public void injectUniformRandomDelay() {
+
+		Employee emp = new Employee();
+		emp.setId(1);
+		emp.setFirstName("Chamu");
+		emp.setLastName("Gurram");
+
+		wireMockRule.stubFor(
+				get(urlPathMatching("/api/v1/employees/1")).willReturn(aResponse().withUniformRandomDelay(6000, 9000)));
+
+		empRestClient.byId(1);
 	}
 
 }
