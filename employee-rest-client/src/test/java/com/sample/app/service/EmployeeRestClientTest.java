@@ -1,6 +1,6 @@
 package com.sample.app.service;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
 import static com.github.tomakehurst.wiremock.client.WireMock.delete;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
@@ -100,7 +100,7 @@ public class EmployeeRestClientTest {
 		List<Employee> resultFromService = empRestClient.emps();
 
 		assertEquals(resultFromService.size(), 6);
-
+		verify(exactly(1), getRequestedFor(urlPathEqualTo("/api/v1/employees")));
 	}
 
 	@Test
@@ -147,6 +147,7 @@ public class EmployeeRestClientTest {
 			assertEquals("Gurram", emp.getLastName());
 		}
 
+		verify(exactly(1), getRequestedFor(urlPathEqualTo("/api/v1/employees")));
 	}
 
 	@Test
@@ -162,6 +163,8 @@ public class EmployeeRestClientTest {
 		assertEquals("Ram", resultEmp.getFirstName());
 		assertEquals("Ponnam", resultEmp.getLastName());
 
+		verify(exactly(1), getRequestedFor(urlPathMatching("/api/v1/employees/3")));
+
 	}
 
 	@Test(expected = EmployeeApiException.class)
@@ -174,6 +177,8 @@ public class EmployeeRestClientTest {
 
 		empRestClient.byId(12345);
 
+		verify(exactly(1), getRequestedFor(urlPathMatching("/api/v1/employees/" + empId)));
+
 	}
 
 	@Test(expected = EmployeeApiException.class)
@@ -185,6 +190,8 @@ public class EmployeeRestClientTest {
 				aResponse().withStatus(404).withHeader("Content-Type", "application/json").withBodyFile("404.json")));
 
 		empRestClient.byId(12345);
+
+		verify(exactly(1), getRequestedFor(urlPathMatching("/api/v1/employees/" + empId)));
 
 	}
 
@@ -250,6 +257,8 @@ public class EmployeeRestClientTest {
 		assertEquals(newEmployee.getFirstName(), "Bala");
 		assertEquals(newEmployee.getLastName(), "Gurram");
 
+		verify(exactly(1), postRequestedFor(urlPathEqualTo("/api/v1/employees")));
+
 	}
 
 	@Test
@@ -274,6 +283,8 @@ public class EmployeeRestClientTest {
 		assertEquals(newEmployee.getId(), 123);
 		assertEquals(newEmployee.getFirstName(), "Bala");
 		assertEquals(newEmployee.getLastName(), "Gurram");
+
+		verify(exactly(1), postRequestedFor(urlPathEqualTo("/api/v1/employees")));
 
 	}
 
@@ -301,6 +312,7 @@ public class EmployeeRestClientTest {
 		assertEquals(newEmployee.getFirstName(), "Bala");
 		assertEquals(newEmployee.getLastName(), "Gurram");
 
+		verify(exactly(1), postRequestedFor(urlPathEqualTo("/api/v1/employees")));
 	}
 
 	@Test
@@ -317,6 +329,8 @@ public class EmployeeRestClientTest {
 
 		assertEquals(newEmployee.getFirstName(), "Bala");
 		assertEquals(newEmployee.getLastName(), "Gurram");
+
+		verify(exactly(1), postRequestedFor(urlPathEqualTo("/api/v1/employees")));
 
 	}
 
@@ -338,6 +352,7 @@ public class EmployeeRestClientTest {
 		assertEquals(newEmployee.getFirstName(), "Bala");
 		assertEquals(newEmployee.getLastName(), "Gurram");
 
+		verify(exactly(1), putRequestedFor(urlPathEqualTo("/api/v1/employees/" + empId)));
 	}
 
 	@Test
@@ -358,6 +373,8 @@ public class EmployeeRestClientTest {
 		assertEquals(deletedEmployee.getId(), 123);
 		assertEquals(deletedEmployee.getFirstName(), "Bala");
 		assertEquals(deletedEmployee.getLastName(), "Gurram");
+
+		verify(moreThan(1), deleteRequestedFor(urlPathEqualTo("/api/v1/employees/" + empId)));
 
 	}
 }
