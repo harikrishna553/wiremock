@@ -30,6 +30,8 @@ public class EmployeeRestClient implements EmployeeService {
 			return webClient.get().uri("api/v1/employees/" + id).retrieve().bodyToMono(Employee.class).block();
 		}catch(WebClientResponseException e) {
 			throw new EmployeeApiException(e.getMessage() + "," + e.getRawStatusCode());
+		}catch(Exception e) {
+			throw new EmployeeApiException(e.getMessage());
 		}
 		
 	}

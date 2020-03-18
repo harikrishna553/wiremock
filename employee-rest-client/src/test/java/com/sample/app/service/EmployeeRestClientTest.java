@@ -1,15 +1,23 @@
 package com.sample.app.service;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
 import static com.github.tomakehurst.wiremock.client.WireMock.delete;
+import static com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.exactly;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
+import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
+import static com.github.tomakehurst.wiremock.client.WireMock.serviceUnavailable;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -26,6 +34,7 @@ import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.common.Json;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
+import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.sample.app.exception.EmployeeApiException;
 import com.sample.app.model.Employee;
@@ -420,6 +429,64 @@ public class EmployeeRestClientTest {
 
 	}
 
+	@Test(expected = EmployeeApiException.class)
+	public void simulate_fault_emptyResponse() {
+
+		Employee emp = new Employee();
+		emp.setId(1);
+		emp.setFirstName("Chamu");
+		emp.setLastName("Gurram");
+
+		wireMockRule.stubFor(
+				get(urlPathMatching("/api/v1/employees/1")).willReturn(aResponse().withFault(Fault.EMPTY_RESPONSE)));
+
+		empRestClient.byId(1);
+
+	}
+
+	@Test(expected = EmployeeApiException.class)
+	public void simulate_fault_connectionResetByPeer() {
+
+		Employee emp = new Employee();
+		emp.setId(1);
+		emp.setFirstName("Chamu");
+		emp.setLastName("Gurram");
+
+		wireMockRule.stubFor(get(urlPathMatching("/api/v1/employees/1"))
+				.willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)));
+
+		empRestClient.byId(1);
+
+	}
+
+	@Test(expected = EmployeeApiException.class)
+	public void simulate_fault_malformedResponseChunk() {
+
+		Employee emp = new Employee();
+		emp.setId(1);
+		emp.setFirstName("Chamu");
+		emp.setLastName("Gurram");
+
+		wireMockRule.stubFor(get(urlPathMatching("/api/v1/employees/1"))
+				.willReturn(aResponse().withFault(Fault.MALFORMED_RESPONSE_CHUNK)));
+
+		empRestClient.byId(1);
+
+	}
+
+	@Test(expected = EmployeeApiException.class)
+	public void simulate_fault_randomDataThenClose() {
+
+		Employee emp = new Employee();
+		emp.setId(1);
+		emp.setFirstName("Chamu");
+		emp.setLastName("Gurram");
+
+		wireMockRule.stubFor(get(urlPathMatching("/api/v1/employees/1"))
+				.willReturn(aResponse().withFault(Fault.RANDOM_DATA_THEN_CLOSE)));
+
+		empRestClient.byId(1);
+
+	}
+
 }
-
-
