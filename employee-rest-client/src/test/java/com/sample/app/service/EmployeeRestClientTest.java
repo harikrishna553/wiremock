@@ -374,7 +374,52 @@ public class EmployeeRestClientTest {
 		assertEquals(deletedEmployee.getFirstName(), "Bala");
 		assertEquals(deletedEmployee.getLastName(), "Gurram");
 
-		verify(moreThan(1), deleteRequestedFor(urlPathEqualTo("/api/v1/employees/" + empId)));
+		verify(exactly(1), deleteRequestedFor(urlPathEqualTo("/api/v1/employees/" + empId)));
 
 	}
+
+	@Test(expected = EmployeeApiException.class)
+	public void simulate_500() {
+
+		Employee emp = new Employee();
+		emp.setId(1);
+		emp.setFirstName("Chamu");
+		emp.setLastName("Gurram");
+
+		wireMockRule.stubFor(get(urlPathMatching("/api/v1/employees/1")).willReturn(serverError()));
+
+		empRestClient.byId(1);
+
+	}
+
+	@Test(expected = EmployeeApiException.class)
+	public void simulate_serverError_500() {
+
+		Employee emp = new Employee();
+		emp.setId(1);
+		emp.setFirstName("Chamu");
+		emp.setLastName("Gurram");
+
+		wireMockRule.stubFor(get(urlPathMatching("/api/v1/employees/1")).willReturn(serverError().withStatus(500)));
+
+		empRestClient.byId(1);
+
+	}
+
+	@Test(expected = EmployeeApiException.class)
+	public void simulate_serviceUnavailableError_503() {
+
+		Employee emp = new Employee();
+		emp.setId(1);
+		emp.setFirstName("Chamu");
+		emp.setLastName("Gurram");
+
+		wireMockRule.stubFor(get(urlPathMatching("/api/v1/employees/1")).willReturn(serviceUnavailable()));
+
+		empRestClient.byId(1);
+
+	}
+
 }
+
+
