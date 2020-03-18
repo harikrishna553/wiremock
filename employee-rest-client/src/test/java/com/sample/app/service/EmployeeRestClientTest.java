@@ -1,6 +1,6 @@
 package com.sample.app.service;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
 import static com.github.tomakehurst.wiremock.client.WireMock.delete;
 import static com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor;
@@ -95,6 +95,7 @@ public class EmployeeRestClientTest {
 				.clientConnector(new ReactorClientHttpConnector(HttpClient.from(tcpClient))).baseUrl(baseURI).build();
 
 		empRestClient = new EmployeeRestClient(webClient);
+
 	}
 
 	@Rule
@@ -528,6 +529,21 @@ public class EmployeeRestClientTest {
 				get(urlPathMatching("/api/v1/employees/1")).willReturn(aResponse().withUniformRandomDelay(6000, 9000)));
 
 		empRestClient.byId(1);
+	}
+
+	@Test
+	public void createNewEmployee_selectiveProxying() {
+
+		Employee emp = new Employee();
+		emp.setFirstName("Bala");
+		emp.setLastName("Gurram");
+
+		wireMockRule.stubFor(post(urlPathEqualTo("/api/v1/employees")).willReturn(aResponse().proxiedFrom("http://localhost:8080")));
+
+		Employee newEmployee = empRestClient.addEmployee(emp);
+
+		assertNotNull(newEmployee);
+
 	}
 
 }
