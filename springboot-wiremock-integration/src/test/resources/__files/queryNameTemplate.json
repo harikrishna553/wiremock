@@ -1,0 +1,12 @@
+[
+	{
+		"id": 1,
+		"firstName": "{{request.query.empName}}",
+		"lastName": "Ponnam"
+	},
+	{
+		"id": 2,
+		"firstName": "Lakshman",
+		"lastName": "{{request.query.empName}}"
+	}
+]
